@@ -5,8 +5,6 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-# 优化器
-import torch.optim as optim
 from loguru import logger
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, Dataset
@@ -68,15 +66,10 @@ class Model(torch.nn.Module):
 
 
 model = Model()
-#激活器 https://github.com/jettify/pytorch-optimizer?tab=readme-ov-file
-#优化器 https://www.cnblogs.com/froml77/p/14956375.html
-criterion = torch.nn.BCELoss(reduction="sum")  # 损失函数
-optimizer = torch.optim.RAdam(model.parameters(), lr=0.04)  # 参数优化
-# criterion = torch.nn.BCELoss(reduction="mean")
-# optimizer = torch.optim.SGD(model.parameters(), lr = 0.06)
-
-# criterion = torch.nn.CrossEntropyLoss()                             # 交叉熵
-# optimizer = optim.SGD(model.parameters(), lr=0.04, momentum=0.5)    # SGD优化器
+# criterion = torch.nn.BCELoss(reduction="sum")  # 损失函数
+# optimizer = torch.optim.Adam(model.parameters(), lr=lr)  # 参数优化
+criterion = torch.nn.BCELoss(reduction="mean")
+optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
 
 
 def train(allepoch):  # 训练函数
@@ -122,4 +115,4 @@ def test():  # 测试函数
 
 
 if __name__ == "__main__":
-    train(500)
+    train(100)
