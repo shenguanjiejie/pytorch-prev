@@ -5,6 +5,9 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+
+# 优化器
+import torch.optim as optim
 from loguru import logger
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, Dataset
@@ -14,7 +17,7 @@ if platform.system() == "Darwin":
 
 lr = 0.001
 xy = np.loadtxt(
-    os.getcwd() + "/data/diabetes.csv", delimiter=",", skiprows=0, dtype=np.float32
+    os.getcwd() + "/data/oil.csv", delimiter=",", skiprows=1, dtype=np.float32
 )
 x = xy[1:, :-1]  # 第一行为标签
 y = xy[1:, [-1]]
@@ -50,26 +53,40 @@ class Model(torch.nn.Module):
         self,
     ):
         super(Model, self).__init__()
-        self.l1 = torch.nn.Linear(8, 32)
-        self.l2 = torch.nn.Linear(32, 16)
-        self.l3 = torch.nn.Linear(16, 1)
-        self.sig = torch.nn.Sigmoid()
+        self.l1 = torch.nn.Linear(13, 64)
+        self.l2 = torch.nn.Linear(64, 32)
+        self.l3 = torch.nn.Linear(32, 16)
+        self.l4 = torch.nn.Linear(16, 8)
+        self.l5 = torch.nn.Linear(8, 3)
+        self.relu = torch.nn.ReLU()
 
     def forward(self, x):
         x = self.l1(x)
-        x = self.sig(x)
+        x = self.relu(x)
         x = self.l2(x)
-        x = self.sig(x)
+        x = self.relu(x)
         x = self.l3(x)
-        x = self.sig(x)
+        x = self.relu(x)
+        x = self.l4(x)
+        x = self.relu(x)
+        x = self.l5(x)
         return x
 
 
 model = Model()
+# 激活器 https://github.com/jettify/pytorch-optimizer?tab=readme-ov-file
+# 优化器 https://www.cnblogs.com/froml77/p/14956375.html
 # criterion = torch.nn.BCELoss(reduction="sum")  # 损失函数
-# optimizer = torch.optim.Adam(model.parameters(), lr=lr)  # 参数优化
-criterion = torch.nn.BCELoss(reduction="mean")
-optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
+# optimizer = torch.optim.RAdam(model.parameters(), lr=0.04)  # 参数优化
+
+criterion = torch.nn.CrossEntropyLoss()  # 交叉熵
+optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.5)  # SGD优化器
+
+# criterion = torch.nn.BCELoss(reduction="mean")
+# optimizer = torch.optim.SGD(model.parameters(), lr = 0.06)
+
+# criterion = torch.nn.CrossEntropyLoss()                             # 交叉熵
+# optimizer = optim.SGD(model.parameters(), lr=0.04, momentum=0.5)    # SGD优化器
 
 
 def train(allepoch):  # 训练函数
@@ -79,7 +96,7 @@ def train(allepoch):  # 训练函数
     for epoch in range(allepoch):
         lost = 0
         l = 0
-        for num, (x, y) in enumerate(trainload):
+        for num, (x, y) in enumerate(trainload,0):
             y_h = model(x)
             loss = criterion(y_h, y)
             optimizer.zero_grad()
@@ -107,7 +124,8 @@ def test():  # 测试函数
         for num, (x, y) in enumerate(testload):
             y_h = model(x)
             # logger.info(y_h.data)
-            ypred = torch.where(y_h >= 0.5, torch.tensor([1.0]), torch.tensor([0.0]))
+            _, ypred = torch.max(y_h.data, dim=1)  # dim = 1 列是第0个维度，行是第1个维度
+            # ypred = torch.where(y_h >= 0.5, torch.tensor([1.0]), torch.tensor([0.0]))
             logger.info(ypred)
             right += (ypred == y).sum().item()
             count += y.size(0)
@@ -115,4 +133,4 @@ def test():  # 测试函数
 
 
 if __name__ == "__main__":
-    train(100)
+    train(500)
