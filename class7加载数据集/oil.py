@@ -112,8 +112,9 @@ def train(allepoch):  # 训练函数
             llsot.append(lost / l)
             lacc.append(acc)
     plt.plot(lepoch, llsot, label="loss")
-    # plt.plot(lepoch, lacc, label="acc")
     plt.legend()
+    plt.show()
+    plt.plot(lepoch, lacc, label="acc")
     plt.show()
 
 
@@ -133,7 +134,7 @@ def test():  # 测试函数
             #     logger.info(yhpred)
             #     logger.info(ypred)
             rightCount = (yhpred == ypred).sum().item()
-            logger.info(rightCount)
+            # logger.info(rightCount)
             right += rightCount
             count += y.size(0)
     return right / count  # 返回准确率
