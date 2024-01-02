@@ -19,8 +19,8 @@ lr = 0.001
 xy = np.loadtxt(
     os.getcwd() + "/data/oil.csv", delimiter=",", skiprows=1, dtype=np.float32
 )
-x = xy[1:, :-1]  # 第一行为标签
-y = xy[1:, [-1]]
+x = xy[1:, :-3]  # 第一行为标签
+y = xy[1:, -3:]
 xtrain, xtest, ytrain, ytest = train_test_split(x, y, test_size=0.3, random_state=0)
 
 
@@ -96,7 +96,7 @@ def train(allepoch):  # 训练函数
     for epoch in range(allepoch):
         lost = 0
         l = 0
-        for num, (x, y) in enumerate(trainload,0):
+        for num, (x, y) in enumerate(trainload):
             y_h = model(x)
             loss = criterion(y_h, y)
             optimizer.zero_grad()
@@ -111,8 +111,8 @@ def train(allepoch):  # 训练函数
             lepoch.append(epoch / 10)
             llsot.append(lost / l)
             lacc.append(acc)
-    # plt.plot(lepoch, llsot, label="lost")
-    plt.plot(lepoch, lacc, label="acc")
+    plt.plot(lepoch, llsot, label="loss")
+    # plt.plot(lepoch, lacc, label="acc")
     plt.legend()
     plt.show()
 
@@ -123,14 +123,21 @@ def test():  # 测试函数
     with torch.no_grad():  # 不参与参数优化
         for num, (x, y) in enumerate(testload):
             y_h = model(x)
+            # print(y_h.size(), y.size(), y_h[0].size(), y[0].size())
+            if y_h[0].size() != y[0].size():
+                continue
             # logger.info(y_h.data)
-            _, ypred = torch.max(y_h.data, dim=1)  # dim = 1 列是第0个维度，行是第1个维度
-            # ypred = torch.where(y_h >= 0.5, torch.tensor([1.0]), torch.tensor([0.0]))
-            logger.info(ypred)
-            right += (ypred == y).sum().item()
+            _, yhpred = torch.max(y_h.data, dim=1)  # dim = 1 列是第0个维度，行是第1个维度
+            _, ypred = torch.max(y.data, dim=1)
+            # if (yhpred != ypred).sum().item() > 0:
+            #     logger.info(yhpred)
+            #     logger.info(ypred)
+            rightCount = (yhpred == ypred).sum().item()
+            logger.info(rightCount)
+            right += rightCount
             count += y.size(0)
     return right / count  # 返回准确率
 
 
 if __name__ == "__main__":
-    train(500)
+    train(2000)
