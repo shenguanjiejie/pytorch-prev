@@ -59,9 +59,9 @@ optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
 if __name__ == "__main__":
     for epoch in range(100):
         for i, data in enumerate(train_loader, 0):  # train_loader 是先shuffle后mini_batch
-            inputs, labels = data  # 取出一个batch
-            y_pred = model(inputs)
-            loss = criterion(y_pred, labels)
+            x, y = data  # 取出一个batch
+            y_pred = model(x)
+            loss = criterion(y_pred, y)
             print(epoch, i, loss.item())
 
             optimizer.zero_grad()

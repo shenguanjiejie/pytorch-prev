@@ -11,5 +11,12 @@ torch = "*"
 torchvision = "*"
 loguru = "*"
 scikit-learn = "*"
+openpyxl = "*"
+xgboost = "*"
+seaborn = "*"
+hyperopt = "*"
+shap = "*"
+lightgbm = "*"
+catboost = "*"
 
 [dev-packages]
