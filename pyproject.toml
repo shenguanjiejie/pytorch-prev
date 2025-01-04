@@ -1,0 +1,31 @@
+[tool.poetry]
+name = "pytorch"
+version = "0.1.0"
+description = ""
+authors = ["Another"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "3.9.20"
+numpy = "*"
+matplotlib = "*"
+pandas = "*"
+torch = "*"
+torchvision = "*"
+loguru = "*"
+scikit-learn = "*"
+openpyxl = "*"
+xgboost = "*"
+seaborn = "*"
+hyperopt = "*"
+shap = "*"
+lightgbm = "*"
+catboost = "*"
+
+[tool.poetry.dev-dependencies]
+# 如果有开发依赖项，可以在这里添加，例如：
+# pytest = "^7.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

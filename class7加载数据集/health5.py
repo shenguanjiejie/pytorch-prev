@@ -18,7 +18,7 @@ if platform.system() == "Darwin":
     matplotlib.use("MacOSX")
 
 lr = 0.001
-CRCtrain=pd.read_excel(os.getcwd() + "/data/IBD血液原始数据_副本.xlsx",sheet_name="first5")#导入数据
+CRCtrain=pd.read_excel(os.getcwd() + "/data/尿液IBD0204.xlsx",sheet_name="first5")#导入数据
 
 xy = CRCtrain.to_numpy()
 x = xy[1:, :-1]  # 第一行为标签
@@ -55,29 +55,27 @@ class Model(torch.nn.Module):
         self,
     ):
         super(Model, self).__init__()
-        self.l1 = torch.nn.Linear(5, 64)
-        self.l2 = torch.nn.Linear(64, 512)
-        self.l3 = torch.nn.Linear(512, 32)
-        # self.l4 = torch.nn.Linear(32, 16)
-        # self.l4 = torch.nn.Linear(16, 8)
-        # self.l5 = torch.nn.Linear(16, 4)
-        self.l6 = torch.nn.Linear(32, 1)
-        self.relu = torch.nn.Sigmoid()
+        self.l1 = torch.nn.Linear(len(traindata.xdata[0]), 64)
+        # self.l2 = torch.nn.Linear(512, 1024)
+        # self.l3 = torch.nn.Linear(1024, 128)
+        self.l4 = torch.nn.Linear(64, 32)
+        self.l5 = torch.nn.Linear(32, 8)
+        self.llast = torch.nn.Linear(8, 1)
+        # self.ls = [self.l1]
+        # self.ls = [self.l1,self.l2,self.l3]
+        # self.ls = [self.l1,self.l2,self.l3,self.l4]
+        # self.ls = [self.l1,self.l2,self.l3,self.l4,self.l5]
+        # self.ls = [self.l1,self.l2,self.l3,self.l4,self.l5,self.l6]
+        self.ls = [self.l1,self.l4,self.l5]
+        self.sigmoid = torch.nn.Sigmoid()
 
     def forward(self, x):
         x = x.float()
-        x = self.l1(x)
-        x = self.relu(x)
-        x = self.l2(x)
-        x = self.relu(x)
-        x = self.l3(x)
-        x = self.relu(x)
-        # x = self.l4(x)
-        # x = self.relu(x)
-        # x = self.l5(x)
-        # x = self.relu(x)
-        x = self.l6(x)
-        x = self.relu(x)
+        for l in self.ls:
+            x = l(x)
+            x = self.sigmoid(x)
+        x = self.llast(x)  # 不添加Sigmoid，因为BCEWithLogitsLoss会自动处理
+        x = self.sigmoid(x)
         return x
 
 
@@ -89,9 +87,11 @@ model = Model()
 
 # criterion = torch.nn.CrossEntropyLoss()  # 交叉熵
 criterion =  torch.nn.BCELoss(reduction="mean")  #  会收敛 不多, 准确率 70%左右
+# criterion = torch.nn.BCEWithLogitsLoss()
 # criterion =  torch.nn.L1Loss()  #
 # optimizer = optim.SGD(model.parameters(), lr=0.002, momentum=0.5)  # SGD优化器 85%
 optimizer = optim.SGD(model.parameters(), lr=0.002, momentum=0.5)  # SGD优化器 85%
+# optimizer = optim.SGD(model.parameters())  # SGD优化器 85%
 
 # criterion = torch.nn.BCELoss(reduction="mean")
 # optimizer = torch.optim.SGD(model.parameters(), lr = 0.06)

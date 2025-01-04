@@ -18,7 +18,7 @@ os.chdir("./") #改变路径
 
 cvSFS= StratifiedShuffleSplit(n_splits=5, test_size=0.3, random_state=100)
 # 文件处理
-CRCtrain=pd.read_excel(os.getcwd() + "/data/IBD血液原始数据_副本.xlsx",sheet_name="train")#导入数据
+CRCtrain=pd.read_excel(os.getcwd() + "/data/尿液IBD0204.xlsx",sheet_name="data")#导入数据
 CRCtrain['ill'].unique()
 import matplotlib.pyplot as plt
 
@@ -31,18 +31,18 @@ plt.rcParams['axes.unicode_minus'] = False
 #codes 方法返回每个分类的整数编码。
 #这些编码是从 0 开始分配的，表示每个不同的分类。
 #例如，如果 '对照' 列包含三个不同的分类：'A', 'B', 'C'，则 'A' 的编码为 0，'B' 的编码为 1，'C' 的编码为 2。
-
+paramMaxIndex = 93
 CRCtrain['ill'] = pd.Categorical(CRCtrain['ill']).codes 
 CRCtrain.columns = CRCtrain.columns.astype(str)
 #将 '对照' 列转换为整数编码，并将结果存储回 '对照' 列。CRC2['类别'] = pd.Categorical(IBD_2['类别']).codes
 #提取特征列
-CRCtrainX=CRCtrain.iloc[:,0:54] ##定义x
+CRCtrainX=CRCtrain.iloc[:,0:93] ##定义x
 CRCtrainX.columns = CRCtrainX.columns.astype(str)
 #提取标签列 
-CRCtrainY=CRCtrain.iloc[:,54]##定义标签
+CRCtrainY=CRCtrain.iloc[:,94]##定义标签
 # CRCtrainY.columns = CRCtrainY.columns.astype(str)
 # 测试集数据
-CRCtest=pd.read_excel(os.getcwd() + "/data/IBD血液原始数据_副本.xlsx",sheet_name="test")#导入数据
+CRCtest=pd.read_excel(os.getcwd() + "/data/尿液IBD0204.xlsx",sheet_name="test")#导入数据
 CRCtest.columns = CRCtest.columns.astype(str)
 #codes 方法返回每个分类的整数编码。
 #这些编码是从 0 开始分配的，表示每个不同的分类。
@@ -51,10 +51,10 @@ CRCtest.columns = CRCtest.columns.astype(str)
 CRCtest['ill'] = pd.Categorical(CRCtest['ill']).codes 
 #将 '对照' 列转换为整数编码，并将结果存储回 '对照' 列。CRC2['类别'] = pd.Categorical(IBD_2['类别']).codes
 #提取特征列
-CRCtestX=CRCtest.iloc[:,0:54] ##定义x
+CRCtestX=CRCtest.iloc[:,0:94] ##定义x
 CRCtestX.columns = CRCtestX.columns.astype(str)
 #提取标签列
-CRCtestY=CRCtest.iloc[:,54]##定义标签
+CRCtestY=CRCtest.iloc[:,95]##定义标签
 # CRCtestY.columns = CRCtestY.columns.astype(str)
 
 # pip install xgboost 
@@ -766,32 +766,32 @@ from lightgbm import LGBMClassifier
 # 重要参数：
 lgb_model = LGBMClassifier()
 
-print('roc_auc={}'.format(cross_val_score(lgb_model,CRCtrainX,CRCtrainY,scoring='roc_auc',cv=cvSFS).mean()))#通过修改scoring的参数可以修改评分器
-#正确预测个数的计数：准确率
+# print('roc_auc={}'.format(cross_val_score(lgb_model,CRCtrainX,CRCtrainY,scoring='roc_auc',cv=cvSFS).mean()))#通过修改scoring的参数可以修改评分器
+# #正确预测个数的计数：准确率
 
-print('准确率={}'.format(cross_val_score(lgb_model,CRCtrainX,CRCtrainY,scoring='accuracy',cv=cvSFS).mean()))#通过修改scoring的参数可以修改评分器
-print('precision{}'.format(cross_val_score(lgb_model,CRCtrainX,CRCtrainY,scoring='precision',cv=cvSFS).mean()))#通过修改scoring的参数可以修改评分器
-from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
+# print('准确率={}'.format(cross_val_score(lgb_model,CRCtrainX,CRCtrainY,scoring='accuracy',cv=cvSFS).mean()))#通过修改scoring的参数可以修改评分器
+# print('precision{}'.format(cross_val_score(lgb_model,CRCtrainX,CRCtrainY,scoring='precision',cv=cvSFS).mean()))#通过修改scoring的参数可以修改评分器
+# from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 
-# 使用训练集进行模型训练
-lgb_model.fit(CRCtrainX, CRCtrainY)
+# # 使用训练集进行模型训练
+# lgb_model.fit(CRCtrainX, CRCtrainY)
 
-# 使用模型进行测试集预测
-y_pred = lgb_model.predict(CRCtestX)
+# # 使用模型进行测试集预测
+# y_pred = lgb_model.predict(CRCtestX)
 
-# 计算评价指标
-accuracy = accuracy_score(CRCtestY, y_pred)
-recall = recall_score(CRCtestY, y_pred)
-precision = precision_score(CRCtestY, y_pred)
+# # 计算评价指标
+# accuracy = accuracy_score(CRCtestY, y_pred)
+# recall = recall_score(CRCtestY, y_pred)
+# precision = precision_score(CRCtestY, y_pred)
 
-auc = roc_auc_score(CRCtestY, y_pred)
+# auc = roc_auc_score(CRCtestY, y_pred)
 
-print(f"AUC: {auc:.2f}")
-print(f"Accuracy: {accuracy:.2f}")
-print(f"Precision: {precision:.2f}")
-print(f"Recall: {recall:.2f}")
-explainer = shap.Explainer(lgb_model)
-shap_values = explainer(CRCtrainX)
+# print(f"AUC: {auc:.2f}")
+# print(f"Accuracy: {accuracy:.2f}")
+# print(f"Precision: {precision:.2f}")
+# print(f"Recall: {recall:.2f}")
+# explainer = shap.Explainer(lgb_model)
+# shap_values = explainer(CRCtrainX)
 
 from sklearn.datasets import load_iris
 

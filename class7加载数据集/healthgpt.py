@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import torch
+import torch.nn as nn
 
 # 优化器
 import torch.optim as optim
@@ -54,25 +55,31 @@ testload = DataLoader(
 
 
 class Model(torch.nn.Module):
-    def __init__(
-        self,
-    ):
+    def __init__(self):
         super(Model, self).__init__()
-        self.l1 = torch.nn.Linear(54, 512)
-        self.l2 = torch.nn.Linear(512, 16)
-        self.l3 = torch.nn.Linear(16, 1)
-        # self.l4 = torch.nn.Linear(8, 1)
-        # self.l5 = torch.nn.Linear(4, 1)
-        self.ls = [self.l1, self.l2, self.l3]
-        # self.ls = [self.l1,self.l2,self.l3,self.l4]
-        # self.ls = [self.l1,self.l2,self.l3,self.l4,self.l5]
-        self.relu = torch.nn.Sigmoid()
+
+        # self.l1 = torch.nn.Linear(54, 512)
+        # self.l2 = torch.nn.Linear(512, 16)
+        # self.l3 = torch.nn.Linear(16, 1)
+        self.ls = nn.ModuleList(
+            [
+                nn.Linear(54, 512),
+                nn.Linear(512, 8),
+                nn.Linear(8, 1),
+                # nn.Linear(4, 1),
+            ]
+        )
+        # self.llast = torch.nn.Linear(16, 1)  # 输出层
+        self.relu = torch.nn.ReLU()  # 使用ReLU激活函数
+        self.sigmoid = torch.nn.Sigmoid()  # 使用Sigmoid激活函数
 
     def forward(self, x):
         x = x.float()
-        for l in self.ls:
+        for l in self.ls[:-1]:  # 遍历隐藏层
             x = l(x)
-            x = self.relu(x)
+            x = self.sigmoid(x)  # 使用 ReLU 激活
+        x = self.ls[-1](x)  # 最后一层直接输出 logits
+        self.sigmoid(x)  # 使用 Sigmoid 激活
         return x
 
 
@@ -81,12 +88,15 @@ model = Model()
 # 优化器 https://www.cnblogs.com/froml77/p/14956375.html
 # criterion = torch.nn.BCELoss(reduction="sum")  # 损失函数
 # optimizer = torch.optim.RAdam(model.parameters(), lr=0.04)  # 参数优化
+# criterion = torch.nn.BCEWithLogitsLoss()  # 集成了 Sigmoid 和 BCELoss
 
 # criterion = torch.nn.CrossEntropyLoss()  # 交叉熵
 # criterion =  torch.nn.BCELoss(reduction="mean")  #  会收敛 不多, 准确率 70%左右
-criterion = torch.nn.L1Loss()  # 效果最好
+criterion = torch.nn.L1Loss()  # 效果最好 鲁棒性较好
+# criterion = torch.nn.SmoothL1Loss()  # 效果同样好
+# criterion = torch.nn.HuberLoss() # 一般般
 # optimizer = optim.SGD(model.parameters(), lr=0.002, momentum=0.5)  # SGD优化器 85%
-optimizer = optim.SGD(model.parameters(), lr=0.002, momentum=0.55)  # SGD优化器 85%
+optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.55)  # SGD优化器 85%
 
 # criterion = torch.nn.BCELoss(reduction="mean")
 # optimizer = torch.optim.SGD(model.parameters(), lr = 0.06)
@@ -120,8 +130,8 @@ def train(allepoch):  # 训练函数
             lacc.append(acc)
     plt.plot(lepoch, llsot, label="loss")
     plt.legend()
-    plt.show()
     plt.plot(lepoch, lacc, label="acc")
+    plt.savefig("loss_accuracy_plot.png")  # 保存为 loss_accuracy_plot.png
     plt.show()
 
 
@@ -137,9 +147,16 @@ def test():  # 测试函数
             # logger.info(y_h.data)
 
             for i in range(y_h.data.shape[0]):
-                yv = y.data[i, 0].item()
-                if yv == (y_h.data[i, 0].item() > 0.5) * 1:
-                    right += 1
+                yv = y.data[i, 0]
+                # probs = torch.sigmoid(y_h)  # 转换为概率
+                # predictions = (probs > 0.5).float()  # 将概率转为二分类结果（0 或 1）
+
+                # # 计算准确率
+                # right += (predictions.data[i, 0] == yv).sum().item()
+
+                right += ((y_h.data[i, 0].item() > 0.5) * 1 == yv).sum().item()
+                # if yv == (y_h.data[i, 0].item() > 0.5) * 1:
+                #     right += 1
 
             # _, yhpred = torch.max(y_h.data, dim=1)  # dim = 1 列是第0个维度，行是第1个维度
             # _, ypred = torch.max(y.data, dim=1)
@@ -156,4 +173,4 @@ def test():  # 测试函数
 
 
 if __name__ == "__main__":
-    train(10000)
+    train(5000)
